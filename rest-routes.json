@@ -7,7 +7,6 @@
 		]
 	},
 	{
-		"method": "POST",
 		"path": "/mws/v1/user-token/verify/{token}",
 		"class": "MWStake\\MediaWiki\\Component\\TokenAuthenticator\\VerifyTokenHandler",
 		"services": [

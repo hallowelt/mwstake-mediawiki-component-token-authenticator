@@ -5,6 +5,7 @@ namespace MWStake\MediaWiki\Component\TokenAuthenticator;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Rest\HttpException;
 use MediaWiki\Rest\SimpleHandler;
+use Wikimedia\ParamValidator\ParamValidator;
 
 class GenerateTokenHandler extends SimpleHandler {
 
@@ -25,7 +26,23 @@ class GenerateTokenHandler extends SimpleHandler {
 		if ( !$user->isRegistered() ) {
 			throw new HttpException( 'User must be registered to generate a token.', 403 );
 		}
-		return $this->userTokenAuthenticator->generateToken( $user );
+		$withIssuer = $this->getValidatedParams()['withIssuer'];
+		return $withIssuer ?
+			$this->userTokenAuthenticator->generateTokenWithIssuer( $user ) :
+			$this->userTokenAuthenticator->generateToken( $user );
+	}
+
+	/**
+	 * @return array[]
+	 */
+	public function getParamSettings() {
+		return [
+			'withIssuer' => [
+				static::PARAM_SOURCE => 'query',
+				ParamValidator::PARAM_TYPE => 'boolean',
+				ParamValidator::PARAM_DEFAULT => false,
+			]
+		];
 	}
 
 	public function needsReadAccess() {

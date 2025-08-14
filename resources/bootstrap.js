@@ -1,9 +1,9 @@
-window.mws = window.mws || {};
-window.mws.tokenAuthenticator = {
-	generateToken: () =>  {
+mws = window.mws || {};
+mws.tokenAuthenticator = {
+	generateToken: ( withIssuer ) =>  {
 		const dfd = $.Deferred();
 		$.ajax( {
-			url: mw.util.wikiScript( 'rest' ) + '/mws/v1/user-token/generate',
+			url: mw.util.wikiScript( 'rest' ) + '/mws/v1/user-token/generate?withIssuer=' + ( withIssuer ? 'true' : 'false' ),
 			dataType: 'json',
 			type: 'GET',
 			contentType: 'application/json; charset=utf-8'
