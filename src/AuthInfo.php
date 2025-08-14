@@ -1,0 +1,48 @@
+<?php
+
+namespace MWStake\MediaWiki\Component\TokenAuthenticator;
+
+use JsonSerializable;
+use MediaWiki\User\UserIdentity;
+
+class AuthInfo implements JsonSerializable {
+
+	/**
+	 * @param UserIdentity $user
+	 * @param string $wikiId
+	 * @param array $groups
+	 */
+	public function __construct(
+		private readonly UserIdentity $user,
+		private readonly string $wikiId,
+		private readonly array $groups,
+	) {
+	}
+
+	/**
+	 * @return UserIdentity
+	 */
+	public function getUser(): UserIdentity {
+		return $this->user;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getGroups(): array {
+		return $this->groups;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function jsonSerialize(): array {
+		return [
+			'username' => $this->user->getName(),
+			'real_name' => $this->user->getRealName(),
+			'id' => $this->user->getId(),
+			'wiki_id' => $this->wikiId,
+			'groups' => $this->groups,
+		];
+	}
+}
