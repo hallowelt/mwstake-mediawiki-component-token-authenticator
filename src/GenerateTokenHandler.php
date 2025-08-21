@@ -23,9 +23,6 @@ class GenerateTokenHandler extends SimpleHandler {
 	 */
 	public function execute() {
 		$user = RequestContext::getMain()->getUser();
-		if ( !$user->isRegistered() ) {
-			throw new HttpException( 'User must be registered to generate a token.', 403 );
-		}
 		$withIssuer = $this->getValidatedParams()['withIssuer'];
 		return $withIssuer ?
 			$this->userTokenAuthenticator->generateTokenWithIssuer( $user ) :

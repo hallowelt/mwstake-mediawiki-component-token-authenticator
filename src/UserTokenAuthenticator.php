@@ -3,6 +3,7 @@
 namespace MWStake\MediaWiki\Component\TokenAuthenticator;
 
 use InvalidArgumentException;
+use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManager;
 use MediaWiki\User\UserIdentity;
@@ -35,13 +36,11 @@ class UserTokenAuthenticator {
 	 * @throws \Random\RandomException
 	 */
 	public function generateToken( UserIdentity $user ) {
-		if ( !$user->isRegistered() ) {
-			throw new InvalidArgumentException( 'User must be registered to generate a token.' );
-		}
+		$username = $user->getName();
 		$token = bin2hex( random_bytes( 16 ) );
 		if ( $this->sessionCache->set(
 			$this->sessionCache->makeKey( $token ),
-			[ 'user' => $user->getName(), 'wiki' => WikiMap::getCurrentWikiId() ],
+			[ 'user' => $username, 'registered' => $user->isRegistered(), 'wiki' => WikiMap::getCurrentWikiId() ],
 			static::TTL
 		) ) {
 			return $token;
@@ -82,8 +81,13 @@ class UserTokenAuthenticator {
 		if ( !$value ) {
 			return null;
 		}
-		$user = $this->userFactory->newFromName( $value['user'] );
-		if ( !$user || !$user->isRegistered() ) {
+		if ( $value['registered'] ) {
+			$user = $this->userFactory->newFromName( $value['user'] );
+		} else {
+			$user = $this->userFactory->newAnonymous( $value['user'] );
+		}
+
+		if ( !$user ) {
 			return null;
 		}
 		return new AuthInfo(
