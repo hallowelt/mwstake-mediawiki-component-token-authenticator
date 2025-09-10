@@ -10,6 +10,9 @@ return [
 			$services->getObjectCacheFactory()->getInstance( $GLOBALS['wgSessionCacheType'] ),
 			$services->getUserFactory(),
 			$services->getUserGroupManager(),
+			$services->getUserOptionsLookup(),
+			$services->getLanguageNameUtils(),
+			$services->getContentLanguage(),
 			$GLOBALS['mwsgTokenAuthenticatorSalt']
 		);
 	},

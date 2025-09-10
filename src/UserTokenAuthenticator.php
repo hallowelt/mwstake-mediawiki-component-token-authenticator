@@ -3,6 +3,12 @@
 namespace MWStake\MediaWiki\Component\TokenAuthenticator;
 
 use InvalidArgumentException;
+use MediaWiki\Language\Language;
+use MediaWiki\Language\LanguageCode;
+use MediaWiki\Languages\LanguageFactory;
+use MediaWiki\Languages\LanguageNameUtils;
+use MediaWiki\MediaWikiServices;
+use MediaWiki\User\Options\UserOptionsLookup;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManager;
@@ -19,6 +25,9 @@ class UserTokenAuthenticator {
 	 * @param BagOStuff $sessionCache
 	 * @param UserFactory $userFactory
 	 * @param UserGroupManager $groupManager
+	 * @param UserOptionsLookup $userOptionsLookup
+	 * @param LanguageNameUtils $languageNameUtils
+	 * @param Language $contentLanguage
 	 * @param string $salt
 	 */
 	public function __construct(
@@ -26,6 +35,9 @@ class UserTokenAuthenticator {
 		private readonly BagOStuff $sessionCache,
 		private readonly UserFactory $userFactory,
 		private readonly UserGroupManager $groupManager,
+		private readonly UserOptionsLookup $userOptionsLookup,
+		private readonly LanguageNameUtils $languageNameUtils,
+		private readonly Language $contentLanguage,
 		private readonly string $salt = ''
 	) {
 	}
@@ -93,7 +105,20 @@ class UserTokenAuthenticator {
 		return new AuthInfo(
 			$user,
 			$value['wiki'],
+			$this->getUserLanguage( $user ),
 			$this->groupManager->getUserEffectiveGroups( $user )
 		);
+	}
+
+	/**
+	 * @param UserIdentity $user
+	 * @return string
+	 */
+	private function getUserLanguage( UserIdentity $user ): string {
+		$option = $this->userOptionsLookup->getOption( $user, 'language', '' );
+		if ( $option && $this->languageNameUtils->isValidCode( $option ) ) {
+			return $option;
+		}
+		return $this->contentLanguage->getCode() ?? 'en';
 	}
 }
