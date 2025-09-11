@@ -73,7 +73,7 @@ class UserTokenAuthenticator {
 			throw new InvalidArgumentException( 'Salt must be set to generate a token with issuer.' );
 		}
 		$token = $this->generateToken( $user );
-		$callbackUrl = $this->urlUtils->expand( wfScript( 'rest' ) );
+		$callbackUrl = wfScript( 'rest' );
 		$signature = hash_hmac( 'sha256', "$callbackUrl$token", $this->salt );
 		return base64_encode( json_encode( [
 			'verifyCallback' => $callbackUrl,
