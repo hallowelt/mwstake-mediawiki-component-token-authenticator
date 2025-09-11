@@ -3,13 +3,10 @@
 namespace MWStake\MediaWiki\Component\TokenAuthenticator;
 
 use InvalidArgumentException;
+use MediaWiki\HookContainer\HookContainer;
 use MediaWiki\Language\Language;
-use MediaWiki\Language\LanguageCode;
-use MediaWiki\Languages\LanguageFactory;
 use MediaWiki\Languages\LanguageNameUtils;
-use MediaWiki\MediaWikiServices;
 use MediaWiki\User\Options\UserOptionsLookup;
-use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManager;
 use MediaWiki\User\UserIdentity;
@@ -28,6 +25,7 @@ class UserTokenAuthenticator {
 	 * @param UserOptionsLookup $userOptionsLookup
 	 * @param LanguageNameUtils $languageNameUtils
 	 * @param Language $contentLanguage
+	 * @param HookContainer $hookContainer
 	 * @param string $salt
 	 */
 	public function __construct(
@@ -38,6 +36,7 @@ class UserTokenAuthenticator {
 		private readonly UserOptionsLookup $userOptionsLookup,
 		private readonly LanguageNameUtils $languageNameUtils,
 		private readonly Language $contentLanguage,
+		private readonly HookContainer $hookContainer,
 		private readonly string $salt = ''
 	) {
 	}
@@ -85,28 +84,37 @@ class UserTokenAuthenticator {
 
 	/**
 	 * @param string $token
-	 * @return AuthInfo|null
+	 * @return UserIdentity|null
 	 */
-	public function getAuthInfo( string $token ): ?AuthInfo {
+	public function verifyToken( string $token ): ?UserIdentity {
 		$key = $this->sessionCache->makeKey( $token );
 		$value = $this->sessionCache->get( $key );
 		if ( !$value ) {
 			return null;
 		}
 		if ( $value['registered'] ) {
-			$user = $this->userFactory->newFromName( $value['user'] );
+			return $this->userFactory->newFromName( $value['user'] );
 		} else {
-			$user = $this->userFactory->newAnonymous( $value['user'] );
+			return $this->userFactory->newAnonymous( $value['user'] );
 		}
+	}
 
-		if ( !$user ) {
-			return null;
+	/**
+	 * @param UserIdentity $user
+	 * @return AuthInfo|null
+	 */
+	public function getAuthInfo( UserIdentity $user ): ?AuthInfo {
+		$meta = [];
+		if ( $user->isAnon() ) {
+			$meta['anon'] = true;
 		}
+		$this->hookContainer->run( 'MWStakeTokenAuthenticatorGetAuthInfo', [ $user, &$meta ] );
 		return new AuthInfo(
 			$user,
-			$value['wiki'],
+			WikiMap::getCurrentWikiId(),
 			$this->getUserLanguage( $user ),
-			$this->groupManager->getUserEffectiveGroups( $user )
+			$this->groupManager->getUserEffectiveGroups( $user ),
+			$meta
 		);
 	}
 

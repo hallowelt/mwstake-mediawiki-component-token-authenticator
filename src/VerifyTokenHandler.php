@@ -22,7 +22,14 @@ class VerifyTokenHandler extends SimpleHandler {
 	 */
 	public function execute() {
 		$params = $this->getValidatedParams();
-		$info = $this->userTokenAuthenticator->getAuthInfo( $params['token'] );
+		$user = $this->userTokenAuthenticator->verifyToken( $params['token'] );
+		if ( !$user ) {
+			throw new HttpException(
+				'Invalid or expired token.',
+				400
+			);
+		}
+		$info = $this->userTokenAuthenticator->getAuthInfo( $user );
 		if ( !$info ) {
 			throw new HttpException(
 				'Invalid or expired token.',

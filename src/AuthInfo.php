@@ -12,12 +12,14 @@ class AuthInfo implements JsonSerializable {
 	 * @param string $wikiId
 	 * @param string $langCode
 	 * @param array $groups
+	 * @param array $metadata
 	 */
 	public function __construct(
 		private readonly UserIdentity $user,
 		private readonly string $wikiId,
 		private readonly string $langCode,
 		private readonly array $groups,
+		private readonly array $metadata = []
 	) {
 	}
 
@@ -46,6 +48,7 @@ class AuthInfo implements JsonSerializable {
 			'wiki_id' => $this->wikiId,
 			'lang_code' => $this->langCode,
 			'groups' => $this->groups,
+			'meta' => $this->metadata,
 		];
 	}
 }

@@ -13,6 +13,7 @@ return [
 			$services->getUserOptionsLookup(),
 			$services->getLanguageNameUtils(),
 			$services->getContentLanguage(),
+			$services->getHookContainer(),
 			$GLOBALS['mwsgTokenAuthenticatorSalt']
 		);
 	},
