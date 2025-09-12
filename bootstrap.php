@@ -12,7 +12,7 @@ MWStake\MediaWiki\ComponentLoader\Bootstrapper::getInstance()
 
 	// Use this value to sign the token.
 	// Same token is set on websocket services to authenticate the token origin
-	$GLOBALS['mwsgTokenAuthenticatorSalt'] = '';
+	$GLOBALS['mwsgTokenAuthenticatorSalt'] = $GLOBALS['mwsgTokenAuthenticatorSalt'] ?? '';
 
 	$restFilePath = wfRelativePath( __DIR__ . '/rest-routes.json', $GLOBALS['IP'] );
 	$GLOBALS['wgRestAPIAdditionalRouteFiles'][] = $restFilePath;
