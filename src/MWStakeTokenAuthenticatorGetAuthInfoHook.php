@@ -8,7 +8,7 @@ interface MWStakeTokenAuthenticatorGetAuthInfoHook {
 
 	/**
 	 * @param UserIdentity $user
-	 * @param array $meta
+	 * @param array &$meta
 	 * @return void
 	 */
 	public function onMWStakeTokenAuthenticatorGetAuthInfo( UserIdentity $user, array &$meta ): void;
