@@ -20,7 +20,7 @@ MWStake\MediaWiki\ComponentLoader\Bootstrapper::getInstance()
 	$GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] = $GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] ?? null;
 	// If you change this value, you are responsible for making sure user is available and is NOT a system user
 	$GLOBALS['mwsgTokenAuthenticatorServiceUser'] =
-		$GLOBALS['mwsgTokenAuthenticatorServiceUser'] ?? 'ChatBot service user';
+		$GLOBALS['mwsgTokenAuthenticatorServiceUser'] ?? 'Internal service user';
 
 	$GLOBALS['mwsgTokenAuthenticatorServiceAllowedAPIModules'] =
 		$GLOBALS['mwsgTokenAuthenticatorServiceAllowedAPIModules'] ?? [];
