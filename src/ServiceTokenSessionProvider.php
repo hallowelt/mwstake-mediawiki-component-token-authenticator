@@ -65,7 +65,7 @@ implements ApiCheckCanExecuteHook {
 	 * @return SessionInfo|null
 	 * @throws MWException
 	 */
-	 public function provideSessionInfo( WebRequest $request ) {
+	public function provideSessionInfo( WebRequest $request ) {
 		if ( !defined( 'MW_API' ) && !defined( 'MW_REST_API' ) ) {
 			// Abstain from providing non-api sessions
 			return null;
@@ -108,16 +108,16 @@ implements ApiCheckCanExecuteHook {
 		}
 
 		return new SessionInfo( SessionInfo::MAX_PRIORITY, [
-			'provider' => $this,
-			'id' => $id,
-			'userInfo' => UserInfo::newFromUser( $user, true ),
-			'persisted' => $persisted,
-			'forceUse' => $forceUse,
-			'metadata' => [
-				'clientIP' => $clientIP
-			],
+		   'provider' => $this,
+		   'id' => $id,
+		   'userInfo' => UserInfo::newFromUser( $user, true ),
+		   'persisted' => $persisted,
+		   'forceUse' => $forceUse,
+		   'metadata' => [
+			   'clientIP' => $clientIP
+		   ],
 		] );
-	 }
+	}
 
 	/**
 	 * @return User|null
