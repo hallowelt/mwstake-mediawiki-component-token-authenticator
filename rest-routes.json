@@ -7,6 +7,13 @@
 		]
 	},
 	{
+		"path": "/mws/v1/app-token/generate",
+		"class": "MWStake\\MediaWiki\\Component\\TokenAuthenticator\\GenerateAppTokenHandler",
+		"services": [
+			"MWStake.TokenAuthenticator.AppAuthenticator", "MWStake.TokenAuthenticator._CIDRValidator"
+		]
+	},
+	{
 		"path": "/mws/v1/user-token/verify/{token}",
 		"class": "MWStake\\MediaWiki\\Component\\TokenAuthenticator\\VerifyTokenHandler",
 		"services": [

@@ -12,7 +12,6 @@ use MediaWiki\Session\UserInfo;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Wikimedia\IPUtils;
 
 /**
  * Provides sessions for service users authenticated via static ChatService token
@@ -24,19 +23,23 @@ implements ApiCheckCanExecuteHook {
 	private string $serviceUserName;
 	/** @var string */
 	private string $token;
-	/** @var string|null */
-	private ?string $cidr;
 	/** @var string[] */
 	private array $allowedActionApis;
 	/** @var string[] */
 	private array $allowedRestPaths;
+	/** @var string|null */
+	private ?string $accessType = null;
 
 	/**
 	 * @param UserFactory $userFactory
+	 * @param CIDRValidator $CIDRValidator
+	 * @param AppTokenAuthenticator $appTokenAuthenticator
 	 * @param array $params
 	 */
 	public function __construct(
 		private readonly UserFactory $userFactory,
+		private readonly CIDRValidator $CIDRValidator,
+		private readonly AppTokenAuthenticator $appTokenAuthenticator,
 		array $params = []
 	) {
 		parent::__construct();
@@ -44,11 +47,6 @@ implements ApiCheckCanExecuteHook {
 		$this->token = $params['token'];
 		$this->allowedActionApis = $params['allow-action'];
 		$this->allowedRestPaths = $params['allow-rest'];
-
-		if ( $params['cidr'] && !IPUtils::isValidRange( $params['cidr'] ) ) {
-			throw new \InvalidArgumentException( 'Invalid CIDR range provided' );
-		}
-		$this->cidr = $params['cidr'];
 	}
 
 	/**
@@ -70,23 +68,47 @@ implements ApiCheckCanExecuteHook {
 			// Abstain from providing non-api sessions
 			return null;
 		}
-		if ( defined( 'MW_REST_API' ) ) {
-			$path = $request->getRequestURL();
-			$restPath = wfScript( 'rest' );
-			// Remove /scriptPath/rest.php from the path
-			$path = substr( $path, strlen( $restPath ) );
-			if ( !$this->isAllowedRestPath( $path ) ) {
-				return null;
+		$clientIP = RequestContext::getMain()->getRequest()->getIP();
+		if ( $this->CIDRValidator->validateIP( $clientIP ) ) {
+			 return null;
+		}
+		$authHeaders = $request->getHeader( 'Authorization' );
+		if ( !$authHeaders ) {
+			return null;
+		}
+		$authHeaders = is_array( $authHeaders ) ? $authHeaders : [ $authHeaders ];
+		$allowed = false;
+		foreach ( $authHeaders as $authHeader ) {
+			$authType = $this->extractAuthType( $authHeader );
+			if ( $authType === 'ApiKey' && $this->token && $authHeader === 'ApiKey ' . $this->token ) {
+				$allowed = true;
+				$this->accessType = 'limited';
+			} elseif ( $authType === 'AppToken' ) {
+				$token = substr( $authHeader, strlen( 'AppToken ' ) );
+				$verification = $this->appTokenAuthenticator->doVerifyToken( $token );
+				if ( $verification && $verification['wiki'] === WikiMap::getCurrentWikiId() ) {
+					$allowed = true;
+					$this->accessType = 'full';
+				}
 			}
 		}
-		$clientIP = RequestContext::getMain()->getRequest()->getIP();
-		if ( $this->cidr && !IPUtils::isInRange( $clientIP, $this->cidr ) ) {
+
+		if ( !$allowed ) {
 			return null;
 		}
-		$authHeader = $request->getHeader( 'Authorization' );
-		if ( !$this->token || $authHeader !== 'ApiKey ' . $this->token ) {
-			return null;
+		if ( defined( 'MW_REST_API' ) ) {
+			if ( $this->accessType !== 'full' ) {
+				$path = $request->getRequestURL();
+				$restPath = wfScript( 'rest' );
+				// Remove /scriptPath/rest.php from the path
+				$path = substr( $path, strlen( $restPath ) );
+				if ( !$this->isAllowedRestPath( $path ) ) {
+					return null;
+				}
+			}
 		}
+
+
 		$user = $this->initUser();
 		if ( !$user ) {
 			return null;
@@ -151,7 +173,7 @@ implements ApiCheckCanExecuteHook {
 	 * @inheritDoc
 	 */
 	public function onApiCheckCanExecute( $module, $user, &$message ) {
-		if ( !$this->isAuthOverThisProvider( $user ) ) {
+		if ( !$this->isAuthOverThisProvider( $user ) || $this->accessType === 'full' ) {
 			return true;
 		}
 
@@ -176,4 +198,9 @@ implements ApiCheckCanExecuteHook {
 		}
 		return false;
 	}
+
+	private function extractAuthType( array|string $authHeader ) {
+
+	}
+
 }
