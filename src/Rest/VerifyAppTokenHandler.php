@@ -1,18 +1,19 @@
 <?php
 
-namespace MWStake\MediaWiki\Component\TokenAuthenticator;
+namespace MWStake\MediaWiki\Component\TokenAuthenticator\Rest;
 
 use MediaWiki\Rest\HttpException;
 use MediaWiki\Rest\SimpleHandler;
+use MWStake\MediaWiki\Component\TokenAuthenticator\AppTokenAuthenticator;
 use Wikimedia\ParamValidator\ParamValidator;
 
-class VerifyTokenHandler extends SimpleHandler {
+class VerifyAppTokenHandler extends SimpleHandler {
 
 	/**
-	 * @param UserTokenAuthenticator $userTokenAuthenticator
+	 * @param AppTokenAuthenticator $appTokenAuthenticator
 	 */
 	public function __construct(
-		private readonly UserTokenAuthenticator $userTokenAuthenticator
+		private readonly AppTokenAuthenticator $appTokenAuthenticator
 	) {
 	}
 
@@ -22,21 +23,14 @@ class VerifyTokenHandler extends SimpleHandler {
 	 */
 	public function execute() {
 		$params = $this->getValidatedParams();
-		$user = $this->userTokenAuthenticator->verifyToken( $params['token'] );
-		if ( !$user ) {
+		$data = $this->appTokenAuthenticator->doVerifyToken( $params['token'] );
+		if ( !$data ) {
 			throw new HttpException(
 				'Invalid or expired token.',
 				400
 			);
 		}
-		$info = $this->userTokenAuthenticator->getAuthInfo( $user );
-		if ( !$info ) {
-			throw new HttpException(
-				'Invalid or expired token.',
-				400
-			);
-		}
-		return $this->getResponseFactory()->createJson( $info->jsonSerialize() );
+		return $this->getResponseFactory()->createJson( $data );
 	}
 
 	/**

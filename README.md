@@ -99,3 +99,6 @@ Generate using `/mws/v1/app-token/generate`.
 
 When making requests provide header: `Authorization AppToken {decoded token}`. This will provide you with
 a full-access session.
+
+Note that this will authenticate as user `mwsgTokenAuthenticatorServiceUser`. It will give this user `sysop` group,
+to ensure it can execute all APIs. If another user is assigned to this, make sure it is ok that this user gets sysop group.

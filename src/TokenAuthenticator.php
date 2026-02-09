@@ -8,7 +8,7 @@ use Random\RandomException;
 use Wikimedia\ObjectCache\BagOStuff;
 
 class TokenAuthenticator {
-	private const TTL = 10;
+	protected const TTL = 10;
 
 	/**
 	 * @param BagOStuff $sessionCache
@@ -31,7 +31,7 @@ class TokenAuthenticator {
 		], $data );
 
 		$token = bin2hex( random_bytes( 16 ) );
-		if ( $this->sessionCache->set( $this->sessionCache->makeKey( $token ), $data, static::TTL ) ) {
+		if ( $this->sessionCache->set( $this->sessionCache->makeKey( $token ), $data, self::TTL ) ) {
 			return $token;
 		} else {
 			throw new InvalidArgumentException( 'Failed to store token in cache.' );

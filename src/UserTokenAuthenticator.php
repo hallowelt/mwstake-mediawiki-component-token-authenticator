@@ -54,6 +54,19 @@ class UserTokenAuthenticator extends TokenAuthenticator {
 	}
 
 	/**
+	 * @param UserIdentity $user
+	 * @return string
+	 * @throws \Random\RandomException
+	 */
+	public function generateTokenWithIssuer( UserIdentity $user ) {
+		$data = [
+			'user' => $user->getName(),
+			'registered' => $user->isRegistered(),
+		];
+		return parent::doGenerateTokenWithIssuer( $data );
+	}
+
+	/**
 	 * @param string $token
 	 * @return UserIdentity|null
 	 */
@@ -62,10 +75,10 @@ class UserTokenAuthenticator extends TokenAuthenticator {
 		if ( !$data ) {
 			return null;
 		}
-		if ( $value['registered'] ) {
-			return $this->userFactory->newFromName( $value['user'] );
+		if ( $data['registered'] ) {
+			return $this->userFactory->newFromName( $data['user'] );
 		} else {
-			return $this->userFactory->newAnonymous( $value['user'] );
+			return $this->userFactory->newAnonymous( $data['user'] );
 		}
 	}
 

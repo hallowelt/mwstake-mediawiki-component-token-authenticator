@@ -56,6 +56,11 @@ MWStake\MediaWiki\ComponentLoader\Bootstrapper::getInstance()
 			'allow-action' => $GLOBALS['mwsgTokenAuthenticatorServiceAllowedAPIModules' ],
 			'allow-rest' => $GLOBALS['mwsgTokenAuthenticatorServiceAllowedRestPaths' ],
 		] ],
-		'services' => [ 'UserFactory', 'MWStake.TokenAuthenticator._CIDRValidator' ]
+		'services' => [
+			'UserFactory',
+			'MWStake.TokenAuthenticator._CIDRValidator',
+			'MWStake.TokenAuthenticator.AppAuthenticator',
+			'UserGroupManager'
+		]
 	];
 } );

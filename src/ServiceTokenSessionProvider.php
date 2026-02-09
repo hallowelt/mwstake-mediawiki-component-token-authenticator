@@ -11,6 +11,7 @@ use MediaWiki\Session\SessionInfo;
 use MediaWiki\Session\UserInfo;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
+use MediaWiki\User\UserGroupManager;
 use MediaWiki\WikiMap\WikiMap;
 
 /**
@@ -34,12 +35,14 @@ implements ApiCheckCanExecuteHook {
 	 * @param UserFactory $userFactory
 	 * @param CIDRValidator $CIDRValidator
 	 * @param AppTokenAuthenticator $appTokenAuthenticator
+	 * @param UserGroupManager $groupManager
 	 * @param array $params
 	 */
 	public function __construct(
 		private readonly UserFactory $userFactory,
 		private readonly CIDRValidator $CIDRValidator,
 		private readonly AppTokenAuthenticator $appTokenAuthenticator,
+		private readonly UserGroupManager $groupManager,
 		array $params = []
 	) {
 		parent::__construct();
@@ -69,7 +72,7 @@ implements ApiCheckCanExecuteHook {
 			return null;
 		}
 		$clientIP = RequestContext::getMain()->getRequest()->getIP();
-		if ( $this->CIDRValidator->validateIP( $clientIP ) ) {
+		if ( !$this->CIDRValidator->validateIP( $clientIP ) ) {
 			 return null;
 		}
 		$authHeaders = $request->getHeader( 'Authorization' );
@@ -83,8 +86,8 @@ implements ApiCheckCanExecuteHook {
 			if ( $authType === 'ApiKey' && $this->token && $authHeader === 'ApiKey ' . $this->token ) {
 				$allowed = true;
 				$this->accessType = 'limited';
-			} elseif ( $authType === 'AppToken' ) {
-				$token = substr( $authHeader, strlen( 'AppToken ' ) );
+			} elseif ( $authType === 'AppToken' || $authType === 'Bearer' ) {
+				$token = $this->stripTokenType( $authHeader );
 				$verification = $this->appTokenAuthenticator->doVerifyToken( $token );
 				if ( $verification && $verification['wiki'] === WikiMap::getCurrentWikiId() ) {
 					$allowed = true;
@@ -107,7 +110,6 @@ implements ApiCheckCanExecuteHook {
 				}
 			}
 		}
-
 
 		$user = $this->initUser();
 		if ( !$user ) {
@@ -136,9 +138,17 @@ implements ApiCheckCanExecuteHook {
 		   'persisted' => $persisted,
 		   'forceUse' => $forceUse,
 		   'metadata' => [
-			   'clientIP' => $clientIP
+			   'clientIP' => $clientIP,
+			   'accessType' => $this->accessType
 		   ],
 		] );
+	}
+
+	/**
+	 * @return true
+	 */
+	public function safeAgainstCsrf() {
+		return true;
 	}
 
 	/**
@@ -153,6 +163,16 @@ implements ApiCheckCanExecuteHook {
 		if ( $isSystem ) {
 			return null;
 		}
+		if ( !$user->isRegistered() ) {
+			$user->addToDatabase();
+		}
+		if ( $this->accessType === 'full' ) {
+			// This is not great, need to be careful
+			$this->groupManager->addUserToGroup( $user, 'sysop' );
+		} else {
+			$this->groupManager->addUserToGroup( $user, 'bot' );
+		}
+
 		return $user;
 	}
 
@@ -199,8 +219,30 @@ implements ApiCheckCanExecuteHook {
 		return false;
 	}
 
-	private function extractAuthType( array|string $authHeader ) {
+	/**
+	 * @param string $authHeader
+	 * @return string|null
+	 */
+	private function extractAuthType( string $authHeader ): ?string {
+		if ( str_starts_with( $authHeader, 'AppToken' ) ) {
+			return 'AppToken';
+		}
+		if ( str_starts_with( $authHeader, 'Bearer' ) ) {
+			return 'Bearer';
+		}
+		if ( str_starts_with( $authHeader, 'ApiKey' ) ) {
+			return 'ApiKey';
+		}
+		return null;
+	}
 
+	/**
+	 * @param string $authHeader
+	 * @return string
+	 */
+	private function stripTokenType( string $authHeader ): string {
+		$parts = explode( ' ', $authHeader, 2 );
+		return $parts[1] ?? '';
 	}
 
 }
