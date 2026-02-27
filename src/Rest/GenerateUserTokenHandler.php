@@ -1,13 +1,14 @@
 <?php
 
-namespace MWStake\MediaWiki\Component\TokenAuthenticator;
+namespace MWStake\MediaWiki\Component\TokenAuthenticator\Rest;
 
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Rest\HttpException;
 use MediaWiki\Rest\SimpleHandler;
+use MWStake\MediaWiki\Component\TokenAuthenticator\UserTokenAuthenticator;
 use Wikimedia\ParamValidator\ParamValidator;
 
-class GenerateTokenHandler extends SimpleHandler {
+class GenerateUserTokenHandler extends SimpleHandler {
 
 	/**
 	 * @param UserTokenAuthenticator $userTokenAuthenticator
