@@ -7,10 +7,10 @@ use Wikimedia\IPUtils;
 class CIDRValidator {
 
 	/**
-	 * @param string $cidr
+	 * @param string|null $cidr
 	 */
 	public function __construct(
-		private readonly string $cidr
+		private readonly ?string $cidr
 	) {
 		// If CIDR IS SET, validate it. If not set, it means there is no IP restriction, so we can skip validation.
 		if ( $this->cidr && !IPUtils::isValidRange( $this->cidr ) ) {
