@@ -22,7 +22,7 @@
 	"autoload": {
 		"psr-4": {
 			"MWStake\\MediaWiki\\Component\\TokenAuthenticator\\": "src/",
-			"MWStake\\MediaWiki\\Component\\TokenAuthenticator\\Tests\\": "tests/"
+			"MWStake\\MediaWiki\\Component\\TokenAuthenticator\\Tests\\": "tests/phpunit/"
 		},
 		"files": [
 			"bootstrap.php"
