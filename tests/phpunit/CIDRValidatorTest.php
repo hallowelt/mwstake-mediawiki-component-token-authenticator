@@ -35,14 +35,14 @@ class CIDRValidatorTest extends TestCase {
 
 	public function testValidateIPReturnsTrueForMatchingIPv6() {
 		$validator = new CIDRValidator();
-		$this->assertTrue( $validator->validateIP( '2001:db8::1','2001:db8::/32' ) );
-		$this->assertTrue( $validator->validateIP( '2001:db8:0:0:0:0:0:1','2001:db8::/32' ) );
+		$this->assertTrue( $validator->validateIP( '2001:db8::1', '2001:db8::/32' ) );
+		$this->assertTrue( $validator->validateIP( '2001:db8:0:0:0:0:0:1', '2001:db8::/32' ) );
 	}
 
 	public function testValidateIPReturnsFalseForNonMatchingIPv6() {
 		$validator = new CIDRValidator();
-		$this->assertFalse( $validator->validateIP( '2001:db9::1','2001:db8::/32' ) );
-		$this->assertFalse( $validator->validateIP( 'fe80::1','2001:db8::/32' ) );
+		$this->assertFalse( $validator->validateIP( '2001:db9::1', '2001:db8::/32' ) );
+		$this->assertFalse( $validator->validateIP( 'fe80::1', '2001:db8::/32' ) );
 	}
 
 	public function testValidateIPReturnsTrueWhenNoCIDRSet() {

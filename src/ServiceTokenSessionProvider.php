@@ -93,7 +93,8 @@ implements ApiCheckCanExecuteHook {
 				if ( $this->matchToken( $authHeader ) ) {
 					if ( $this->tokenCIDR && !$cidrValidator->validateIP( $clientIP, $this->tokenCIDR ) ) {
 						$this->logger->info(
-							'ServiceTokenSessionProvider: Rejecting request from IP {clientIP} - not in allowed CIDR range: {cidr}',
+							'ServiceTokenSessionProvider: Rejecting request from IP {clientIP} - ' .
+							'not in allowed CIDR range: {cidr}',
 							[ 'clientIP' => $clientIP, 'cird' => $this->tokenCIDR ]
 						);
 						return null;
@@ -107,7 +108,8 @@ implements ApiCheckCanExecuteHook {
 			} elseif ( $authType === 'AppToken' || $authType === 'Bearer' ) {
 				if ( $this->mainCIDR && !$cidrValidator->validateIP( $clientIP, $this->mainCIDR ) ) {
 					$this->logger->info(
-						'ServiceTokenSessionProvider: Rejecting request from IP {clientIP} - not in allowed CIDR range: {cidr}',
+						'ServiceTokenSessionProvider: Rejecting request from IP {clientIP} - ' .
+						'not in allowed CIDR range: {cidr}',
 						[ 'clientIP' => $clientIP, 'cird' => $this->mainCIDR ]
 					);
 					return null;
