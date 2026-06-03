@@ -110,7 +110,7 @@ implements ApiCheckCanExecuteHook {
 					$this->logger->info(
 						'ServiceTokenSessionProvider: Rejecting request from IP {clientIP} - ' .
 						'not in allowed CIDR range: {cidr}',
-						[ 'clientIP' => $clientIP, 'cird' => $this->mainCIDR ]
+						[ 'clientIP' => $clientIP, 'cidr' => $this->mainCIDR ]
 					);
 					return null;
 				}
@@ -299,7 +299,7 @@ implements ApiCheckCanExecuteHook {
 				continue;
 			}
 			if ( $authHeader === 'ApiKey ' . $tokenData['token'] ) {
-				if ( $tokenData['context-user'] ) {
+				if ( !empty( $tokenData['context-user'] ) ) {
 					$this->serviceUserName = $tokenData['context-user'];
 				}
 				$this->allowedActionApis = $tokenData['api-modules'] ?? [];

@@ -14,11 +14,9 @@ class GenerateAppTokenHandler extends SimpleHandler {
 
 	/**
 	 * @param AppTokenAuthenticator $tokenAuthenticator
-	 * @param CIDRValidator $CIDRValidator
 	 */
 	public function __construct(
-		private readonly AppTokenAuthenticator $tokenAuthenticator,
-		private readonly CIDRValidator $CIDRValidator
+		private readonly AppTokenAuthenticator $tokenAuthenticator
 	) {
 	}
 
@@ -28,7 +26,9 @@ class GenerateAppTokenHandler extends SimpleHandler {
 	 * @throws RandomException
 	 */
 	public function execute() {
-		if ( !$this->CIDRValidator->validateIP( RequestContext::getMain()->getRequest()->getIP() ) ) {
+		$cidrValidator = new CIDRValidator();
+		$clientIP = RequestContext::getMain()->getRequest()->getIP();
+		if ( !$cidrValidator->validateIP( $clientIP, $GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] ) ) {
 			throw new HttpException( 403, 'Forbidden' );
 		}
 		return $this->tokenAuthenticator->generateToken();
