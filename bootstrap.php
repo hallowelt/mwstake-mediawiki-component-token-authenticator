@@ -6,7 +6,7 @@ if ( defined( 'MWSTAKE_MEDIAWIKI_COMPONENT_TOKEN_AUTHENTICATOR_VERSION' ) ) {
 	return;
 }
 
-define( 'MWSTAKE_MEDIAWIKI_COMPONENT_TOKEN_AUTHENTICATOR_VERSION', '1.2.2' );
+define( 'MWSTAKE_MEDIAWIKI_COMPONENT_TOKEN_AUTHENTICATOR_VERSION', '2.0.0' );
 
 MWStake\MediaWiki\ComponentLoader\Bootstrapper::getInstance()
 ->register( 'token-authenticator', static function () {
@@ -16,17 +16,14 @@ MWStake\MediaWiki\ComponentLoader\Bootstrapper::getInstance()
 	// Same token is set on websocket services to authenticate the token origin
 	$GLOBALS['mwsgTokenAuthenticatorSalt'] = $GLOBALS['mwsgTokenAuthenticatorSalt'] ?? '';
 
-	$GLOBALS['mwsgTokenAuthenticatorServiceToken'] = $GLOBALS['mwsgTokenAuthenticatorServiceToken'] ?? '';
-	$GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] = $GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] ?? null;
+	// Default CIDR, used for all tokens not specifying their own and for generating/verifying AppTokens
+	$GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] = $GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] ?? '';
+
 	// If you change this value, you are responsible for making sure user is available and is NOT a system user
 	$GLOBALS['mwsgTokenAuthenticatorServiceUser'] =
 		$GLOBALS['mwsgTokenAuthenticatorServiceUser'] ?? 'Internal service user';
 
-	$GLOBALS['mwsgTokenAuthenticatorServiceAllowedAPIModules'] =
-		$GLOBALS['mwsgTokenAuthenticatorServiceAllowedAPIModules'] ?? [];
-
-	$GLOBALS['mwsgTokenAuthenticatorServiceAllowedRestPaths'] =
-		$GLOBALS['mwsgTokenAuthenticatorServiceAllowedRestPaths'] ?? [];
+	$GLOBALS['mwsgTokenAuthenticatorServiceTokens'] = $GLOBALS['mwsgTokenAuthenticatorServiceTokens'] ?? [];
 
 	$restFilePath = wfRelativePath( __DIR__ . '/rest-routes.json', $GLOBALS['IP'] );
 	$GLOBALS['wgRestAPIAdditionalRouteFiles'][] = $restFilePath;
@@ -52,13 +49,11 @@ MWStake\MediaWiki\ComponentLoader\Bootstrapper::getInstance()
 		'class' => ServiceTokenSessionProvider::class,
 		'args' => [ [
 			'service-user' => $GLOBALS['mwsgTokenAuthenticatorServiceUser'],
-			'token' => $GLOBALS['mwsgTokenAuthenticatorServiceToken'],
-			'allow-action' => $GLOBALS['mwsgTokenAuthenticatorServiceAllowedAPIModules' ],
-			'allow-rest' => $GLOBALS['mwsgTokenAuthenticatorServiceAllowedRestPaths' ],
+			'tokens' => $GLOBALS['mwsgTokenAuthenticatorServiceTokens'],
+			'main-cidr' => $GLOBALS['mwsgTokenAuthenticatorServiceCIDR']
 		] ],
 		'services' => [
 			'UserFactory',
-			'MWStake.TokenAuthenticator._CIDRValidator',
 			'MWStake.TokenAuthenticator.AppAuthenticator',
 			'UserGroupManager'
 		]

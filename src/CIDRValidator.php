@@ -7,21 +7,17 @@ use Wikimedia\IPUtils;
 class CIDRValidator {
 
 	/**
-	 * @param string|null $cidr
+	 * @param string $ip
+	 * @param string $cidr
+	 * @return bool
 	 */
-	public function __construct(
-		private readonly ?string $cidr
-	) {
-		// If CIDR IS SET, validate it. If not set, it means there is no IP restriction, so we can skip validation.
-		if ( $this->cidr && !IPUtils::isValidRange( $this->cidr ) ) {
-			throw new \InvalidArgumentException( 'Invalid CIDR range provided' );
-		}
-	}
-
-	public function validateIP( string $ip ): bool {
-		if ( !$this->cidr ) {
+	public function validateIP( string $ip, string $cidr ): bool {
+		if ( !$cidr ) {
 			return true;
 		}
-		return IPUtils::isInRange( $ip, $this->cidr );
+		if ( $cidr && !IPUtils::isValidRange( $cidr ) ) {
+			throw new \InvalidArgumentException( 'Invalid CIDR range provided' );
+		}
+		return IPUtils::isInRange( $ip, $cidr );
 	}
 }
