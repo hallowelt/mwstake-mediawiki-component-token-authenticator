@@ -1,6 +1,6 @@
 <?php
 
-namespace MWStake\MediaWiki\Component\TokenAuthenticator\Tests;
+namespace MWStake\MediaWiki\Component\TokenAuthenticator\Tests\Unit;
 
 use MediaWiki\HookContainer\HookContainer;
 use MediaWiki\Language\Language;

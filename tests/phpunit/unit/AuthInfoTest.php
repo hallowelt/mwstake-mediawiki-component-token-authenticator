@@ -1,6 +1,6 @@
 <?php
 
-namespace MWStake\MediaWiki\Component\TokenAuthenticator\Tests;
+namespace MWStake\MediaWiki\Component\TokenAuthenticator\Tests\Unit;
 
 use MediaWiki\User\UserIdentity;
 use MWStake\MediaWiki\Component\TokenAuthenticator\AuthInfo;

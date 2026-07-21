@@ -34,6 +34,9 @@ class GenerateAppTokenHandler extends SimpleHandler {
 		return $this->tokenAuthenticator->generateToken();
 	}
 
+	/**
+	 * @inheritDoc
+	 */
 	public function needsReadAccess() {
 		return true;
 	}

@@ -1,6 +1,6 @@
 <?php
 
-namespace MWStake\MediaWiki\Component\TokenAuthenticator\Tests;
+namespace MWStake\MediaWiki\Component\TokenAuthenticator\Tests\Unit;
 
 use InvalidArgumentException;
 use MWStake\MediaWiki\Component\TokenAuthenticator\CIDRValidator;
