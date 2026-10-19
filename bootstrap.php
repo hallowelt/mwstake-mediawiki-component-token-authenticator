@@ -1,5 +1,7 @@
 <?php
 
+use MediaWiki\Config\ConfigException;
+use MWStake\MediaWiki\Component\TokenAuthenticator\CIDRValidator;
 use MWStake\MediaWiki\Component\TokenAuthenticator\ServiceTokenSessionProvider;
 
 if ( defined( 'MWSTAKE_MEDIAWIKI_COMPONENT_TOKEN_AUTHENTICATOR_VERSION' ) ) {
@@ -16,8 +18,18 @@ MWStake\MediaWiki\ComponentLoader\Bootstrapper::getInstance()
 	// Same token is set on websocket services to authenticate the token origin
 	$GLOBALS['mwsgTokenAuthenticatorSalt'] = $GLOBALS['mwsgTokenAuthenticatorSalt'] ?? '';
 
-	// Default CIDR, used for all tokens not specifying their own and for generating/verifying AppTokens
-	$GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] = $GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] ?? '';
+	// Default CIDR, used for all tokens not specifying their own and for generating/verifying AppTokens.
+	// Must never be empty, for security reasons - service tokens grant far-reaching access,
+	// so access to them is always restricted to a network range.
+	$GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] =
+		$GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] ?? CIDRValidator::DEFAULT_CIDR;
+
+	if ( !CIDRValidator::isValidCIDR( $GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] ) ) {
+		throw new ConfigException(
+			'$GLOBALS[\'mwsgTokenAuthenticatorServiceCIDR\'] must be set to a valid, non-empty CIDR range ' .
+			'(e.g. "127.0.0.1/32"). Disabling the CIDR restriction is not allowed for security reasons.'
+		);
+	}
 
 	// If you change this value, you are responsible for making sure user is available and is NOT a system user
 	$GLOBALS['mwsgTokenAuthenticatorServiceUser'] =
