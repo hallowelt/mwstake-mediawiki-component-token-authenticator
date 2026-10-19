@@ -45,12 +45,31 @@ class CIDRValidatorTest extends TestCase {
 		$this->assertFalse( $validator->validateIP( 'fe80::1', '2001:db8::/32' ) );
 	}
 
-	public function testValidateIPReturnsTrueWhenNoCIDRSet() {
+	public function testValidateIPThrowsExceptionForEmptyCIDR() {
+		$this->expectException( InvalidArgumentException::class );
+		$this->expectExceptionMessage( 'CIDR range must not be empty' );
+
 		$validator = new CIDRValidator();
-		$this->assertTrue( $validator->validateIP( '192.168.1.1', '' ) );
-		$this->assertTrue( $validator->validateIP( '10.0.0.1', '' ) );
-		$this->assertTrue( $validator->validateIP( '2001:db8::1', '' ) );
-		$this->assertTrue( $validator->validateIP( 'any-ip-here', '' ) );
+		$validator->validateIP( '192.168.1.1', '' );
+	}
+
+	public function testAssertValidCIDRThrowsExceptionForEmptyCIDR() {
+		$this->expectException( InvalidArgumentException::class );
+		$this->expectExceptionMessage( 'CIDR range must not be empty' );
+
+		$validator = new CIDRValidator();
+		$validator->assertValidCIDR( '' );
+	}
+
+	public function testIsValidCIDR() {
+		$this->assertFalse( CIDRValidator::isValidCIDR( '' ) );
+		$this->assertFalse( CIDRValidator::isValidCIDR( null ) );
+		$this->assertFalse( CIDRValidator::isValidCIDR( [] ) );
+		$this->assertFalse( CIDRValidator::isValidCIDR( 'invalid_cidr' ) );
+		$this->assertFalse( CIDRValidator::isValidCIDR( '192.168.1.1' ) );
+		$this->assertTrue( CIDRValidator::isValidCIDR( '192.168.1.0/24' ) );
+		$this->assertTrue( CIDRValidator::isValidCIDR( '2001:db8::/32' ) );
+		$this->assertTrue( CIDRValidator::isValidCIDR( CIDRValidator::DEFAULT_CIDR ) );
 	}
 
 	public function testValidateIPWithSingleIPCIDR() {
