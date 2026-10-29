@@ -70,14 +70,29 @@ $GLOBALS['mwsgTokenAuthenticatorServiceTokens'] = [
 ```
 
 Of these values, optional are:
-- `cidr` - if omitted, $GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] will be used. To disable CIDR checking, set to empty string.
+- `cidr` - if omitted, `$GLOBALS['mwsgTokenAuthenticatorServiceCIDR']` will be used. It cannot be used to disable
+CIDR checking: if set to an empty string or an invalid range, the global value is used instead.
 - `user-context` - if omitted, $GLOBALS['mwsgTokenAuthenticatorServiceUser'] will be used.
 
 ## Global settings
 
-You can limit access to specific CIDR ranges by configuring
+### CIDR restriction (required)
+
+Access is always limited to a CIDR range, configured by
 
 `$GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] = '127.0.0.1/32';`
+
+**This value must never be empty.** Service tokens grant far-reaching (for AppTokens: full) access to the wiki,
+so they must only ever be usable from a trusted network range. Therefore:
+
+- If not configured, it defaults to `127.0.0.1/32` (local access only).
+- If set to an empty string, or to anything that is not a valid CIDR range, a `ConfigException` is thrown on setup.
+- Per-token `cidr` values cannot disable the check - invalid or empty values fall back to the global range.
+- Requests from IPs outside the configured range are rejected (session is not provided, token generation
+returns `403 Forbidden`).
+
+To allow a wider range, configure it explicitly, e.g. `'10.0.0.0/8'`. Note that a range like `'0.0.0.0/0'`
+effectively disables the protection and must not be used in production.
 
 
 
@@ -107,7 +122,8 @@ Note that this will authenticate as user `mwsgTokenAuthenticatorServiceUser`. It
 to ensure it can execute all APIs. If another user is assigned to this, make sure it is ok that this user gets sysop group.
 
 When issuing and granting sessions based on these tokens, `$GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] = '127.0.0.1/32';`
-is respected, to limit access.
+is respected, to limit access. As this token grants full access, the CIDR restriction is mandatory and
+cannot be disabled (see [CIDR restriction](#cidr-restriction-required)).
 
 When session is created for such token, it will be created on behalf of `$GLOBALS['mwsgTokenAuthenticatorServiceUser']`
 
