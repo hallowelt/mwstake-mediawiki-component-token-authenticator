@@ -2,6 +2,7 @@
 
 namespace MWStake\MediaWiki\Component\TokenAuthenticator;
 
+use InvalidArgumentException;
 use MediaWiki\Api\Hook\ApiCheckCanExecuteHook;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\MediaWikiServices;
@@ -53,7 +54,13 @@ implements ApiCheckCanExecuteHook {
 		$this->serviceUserName = $params['service-user'];
 		$this->defaultServiceUserName = $params['service-user'];
 		$this->tokens = $params['tokens'];
-		$this->mainCIDR = $params['main-cidr'];
+		$mainCIDR = $params['main-cidr'] ?? '';
+		if ( !CIDRValidator::isValidCIDR( $mainCIDR ) ) {
+			throw new InvalidArgumentException(
+				'ServiceTokenSessionProvider: "main-cidr" must be a valid, non-empty CIDR range'
+			);
+		}
+		$this->mainCIDR = $mainCIDR;
 	}
 
 	/**
@@ -94,11 +101,11 @@ implements ApiCheckCanExecuteHook {
 			$authType = $this->extractAuthType( $authHeader );
 			if ( $authType === 'ApiKey' ) {
 				if ( $this->matchToken( $authHeader ) ) {
-					if ( $this->tokenCIDR && !$cidrValidator->validateIP( $clientIP, $this->tokenCIDR ) ) {
+					if ( !$cidrValidator->validateIP( $clientIP, $this->tokenCIDR ) ) {
 						$this->logger->info(
 							'ServiceTokenSessionProvider: Rejecting request from IP {clientIP} - ' .
 							'not in allowed CIDR range: {cidr}',
-							[ 'clientIP' => $clientIP, 'cird' => $this->tokenCIDR ]
+							[ 'clientIP' => $clientIP, 'cidr' => $this->tokenCIDR ]
 						);
 						return null;
 					}
@@ -109,7 +116,7 @@ implements ApiCheckCanExecuteHook {
 					$this->accessType = 'limited';
 				}
 			} elseif ( $authType === 'AppToken' || $authType === 'Bearer' ) {
-				if ( $this->mainCIDR && !$cidrValidator->validateIP( $clientIP, $this->mainCIDR ) ) {
+				if ( !$cidrValidator->validateIP( $clientIP, $this->mainCIDR ) ) {
 					$this->logger->info(
 						'ServiceTokenSessionProvider: Rejecting request from IP {clientIP} - ' .
 						'not in allowed CIDR range: {cidr}',
@@ -307,8 +314,17 @@ implements ApiCheckCanExecuteHook {
 				);
 				$this->allowedActionApis = $tokenData['api-modules'] ?? [];
 				$this->allowedRestPaths = $tokenData['rest-paths'] ?? [];
-				if ( isset( $tokenData['cird'] ) ) {
-					$this->tokenCIDR = $tokenData['cird'];
+				if ( isset( $tokenData['cidr'] ) ) {
+					if ( CIDRValidator::isValidCIDR( $tokenData['cidr'] ) ) {
+						$this->tokenCIDR = $tokenData['cidr'];
+					} else {
+						// CIDR restriction must never be disabled - fall back to the global range
+						$this->logger->warning(
+							'ServiceTokenSessionProvider: Token defines an empty or invalid CIDR range - ' .
+							'falling back to $mwsgTokenAuthenticatorServiceCIDR'
+						);
+						$this->tokenCIDR = $this->mainCIDR;
+					}
 				}
 				return true;
 			}
