@@ -61,7 +61,7 @@ jobs:
 
       - name: Clone MediaWiki
         working-directory: .
-        run: git clone --depth 1 -b REL1_47 https://github.com/wikimedia/mediawiki.git .
+        run: git clone --depth 1 -b REL1_47 https://github.com/wikimedia/mediawiki.git mediawiki
 
       - name: Install dependencies
         run: composer update
