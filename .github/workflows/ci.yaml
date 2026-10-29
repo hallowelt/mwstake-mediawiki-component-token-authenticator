@@ -16,7 +16,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: 8.5
           tools: composer:2
 
       - name: Validate composer.json
@@ -38,7 +38,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Install dependencies
         run: npm ci
@@ -48,32 +48,38 @@ jobs:
 
   phpunit:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mediawiki
     steps:
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: 8.5
           tools: composer:2
 
       - name: Clone MediaWiki
-        run: git clone --depth 1 -b REL1_43 https://github.com/wikimedia/mediawiki.git .
+        working-directory: .
+        run: git clone --depth 1 -b REL1_47 https://github.com/wikimedia/mediawiki.git .
 
       - name: Install dependencies
         run: composer update
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: mediawiki/extensions/${{ github.event.repository.name }}
 
       - name: Composer require
         run: |
           REPO="${{ github.event.repository.name }}"
           PACKAGE="${REPO#mwstake-}"
-          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
-          composer require "mwstake/${PACKAGE}:dev-${BRANCH}" --prefer-source
+          composer config repositories."$REPO" '{"type":"path","url":"extensions/'"$REPO"'","options":{"symlink":false}}'
+          composer require "mwstake/${PACKAGE}:@dev"
 
       - name: Create LocalSettings.php
         run: echo '<?php $wgServer = "";' > LocalSettings.php
 
       - name: Run tests
-        run: |
-          REPO="${{ github.event.repository.name }}"
-          PACKAGE="${REPO#mwstake-}"
-          composer phpunit:unit -- --colors=always "vendor/mwstake/${PACKAGE}/tests/phpunit/unit" --exclude-group Broken,ParserFuzz,Stub
+        run: composer phpunit:unit -- --colors=always "extensions/${{ github.event.repository.name }}/tests/phpunit/unit" --exclude-group Broken,ParserFuzz,Stub
