@@ -3,6 +3,7 @@
 use MediaWiki\Config\ConfigException;
 use MWStake\MediaWiki\Component\TokenAuthenticator\CIDRValidator;
 use MWStake\MediaWiki\Component\TokenAuthenticator\ServiceTokenSessionProvider;
+use MWStake\MediaWiki\Component\TokenAuthenticator\ServiceUserConfiguration;
 
 if ( defined( 'MWSTAKE_MEDIAWIKI_COMPONENT_TOKEN_AUTHENTICATOR_VERSION' ) ) {
 	return;
@@ -55,7 +56,11 @@ MWStake\MediaWiki\ComponentLoader\Bootstrapper::getInstance()
 	};
 
 	if ( is_string( $GLOBALS['mwsgTokenAuthenticatorServiceUser'] ) ) {
-		$GLOBALS['wgReservedUsernames'][] = $GLOBALS['mwsgTokenAuthenticatorServiceUser'];
+		ServiceUserConfiguration::addReservedUsernames(
+			$GLOBALS['wgReservedUsernames'],
+			$GLOBALS['mwsgTokenAuthenticatorServiceTokens'],
+			$GLOBALS['mwsgTokenAuthenticatorServiceUser']
+		);
 	}
 	$GLOBALS['wgSessionProviders'][ServiceTokenSessionProvider::class] = [
 		'class' => ServiceTokenSessionProvider::class,

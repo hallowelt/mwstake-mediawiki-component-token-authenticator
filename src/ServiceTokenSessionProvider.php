@@ -23,6 +23,8 @@ implements ApiCheckCanExecuteHook {
 
 	/** @var string */
 	private string $serviceUserName;
+	/** @var string */
+	private string $defaultServiceUserName;
 	/** @var array */
 	private array $tokens;
 	/** @var string */
@@ -50,6 +52,7 @@ implements ApiCheckCanExecuteHook {
 	) {
 		parent::__construct();
 		$this->serviceUserName = $params['service-user'];
+		$this->defaultServiceUserName = $params['service-user'];
 		$this->tokens = $params['tokens'];
 		$mainCIDR = $params['main-cidr'] ?? '';
 		if ( !CIDRValidator::isValidCIDR( $mainCIDR ) ) {
@@ -306,9 +309,9 @@ implements ApiCheckCanExecuteHook {
 				continue;
 			}
 			if ( $authHeader === 'ApiKey ' . $tokenData['token'] ) {
-				if ( !empty( $tokenData['context-user'] ) ) {
-					$this->serviceUserName = $tokenData['context-user'];
-				}
+				$this->serviceUserName = ServiceUserConfiguration::getUserName(
+					$tokenData, $this->defaultServiceUserName
+				);
 				$this->allowedActionApis = $tokenData['api-modules'] ?? [];
 				$this->allowedRestPaths = $tokenData['rest-paths'] ?? [];
 				if ( isset( $tokenData['cidr'] ) ) {
