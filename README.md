@@ -71,7 +71,13 @@ $GLOBALS['mwsgTokenAuthenticatorServiceTokens'] = [
 
 Of these values, optional are:
 - `cidr` - if omitted, $GLOBALS['mwsgTokenAuthenticatorServiceCIDR'] will be used. To disable CIDR checking, set to empty string.
-- `user-context` - if omitted, $GLOBALS['mwsgTokenAuthenticatorServiceUser'] will be used.
+- `user-context` - preferred key for the username represented by the token. The legacy alias
+  `context-user` is also supported. A non-empty `user-context` takes precedence when both are set.
+  If neither is non-empty, $GLOBALS['mwsgTokenAuthenticatorServiceUser'] will be used.
+
+The default service username and each token's effective context username are automatically added to
+`$wgReservedUsernames`, preserving existing entries and avoiding duplicates. This prevents normal
+registration and login with these usernames; service-token authentication remains available.
 
 ## Global settings
 
