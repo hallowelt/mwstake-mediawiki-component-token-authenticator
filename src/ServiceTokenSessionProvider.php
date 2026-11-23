@@ -188,11 +188,11 @@ implements ApiCheckCanExecuteHook {
 		if ( !$user->isRegistered() ) {
 			$user->addToDatabase();
 		}
-		if ( $this->accessType === 'full' ) {
-			// This is not great, need to be careful
-			$this->groupManager->addUserToGroup( $user, 'sysop' );
-		} else {
-			$this->groupManager->addUserToGroup( $user, 'bot' );
+		// 'sysop' is not great, need to be careful
+		$group = $this->accessType === 'full' ? 'sysop' : 'bot';
+		// Write only when the group is missing. A write on every request deadlocks parallel requests
+		if ( !in_array( $group, $this->groupManager->getUserGroups( $user ), true ) ) {
+			$this->groupManager->addUserToGroup( $user, $group );
 		}
 
 		return $user;
